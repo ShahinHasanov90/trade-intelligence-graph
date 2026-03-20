@@ -1,0 +1,135 @@
+# Trade Intelligence Graph Configuration
+# ========================================
+
+graph:
+  # Default backend: "networkx" or "neo4j"
+  backend: "networkx"
+
+  # Entity resolution settings
+  entity_resolution:
+    # Fuzzy matching threshold (0.0 - 1.0)
+    similarity_threshold: 0.85
+    # Fields to use for matching
+    match_fields:
+      - "name"
+      - "tax_id"
+      - "address"
+      - "phone"
+
+  # Edge weight configuration
+  edge_weights:
+    # How to compute edge weights
+    method: "composite"  # "frequency", "volume", "composite"
+    # Weight components for composite method
+    components:
+      frequency: 0.4
+      volume: 0.3
+      recency: 0.3
+
+analysis:
+  # Community detection
+  community:
+    algorithm: "louvain"  # "louvain", "leiden", "label_propagation"
+    resolution: 1.0
+    min_community_size: 3
+    random_seed: 42
+
+  # Centrality
+  centrality:
+    pagerank:
+      alpha: 0.85
+      max_iter: 100
+      tol: 1.0e-06
+    betweenness:
+      normalized: true
+      k: null  # Sample size, null for exact computation
+    degree:
+      normalized: true
+
+  # Temporal analysis
+  temporal:
+    # Window size for snapshots (days)
+    window_size: 30
+    # Overlap between windows (days)
+    window_overlap: 7
+    # Minimum change threshold for structural alerts
+    structural_change_threshold: 0.15
+
+  # Risk propagation
+  propagation:
+    # Maximum depth for propagation
+    max_depth: 4
+    # Decay factor per hop (multiplicative)
+    decay_factor: 0.5
+    # Minimum risk score to propagate
+    min_propagation_threshold: 0.1
+    # Edge type weights for propagation
+    edge_type_weights:
+      IMPORTS_FROM: 1.0
+      REPRESENTED_BY: 0.8
+      LOCATED_AT: 0.6
+      CONTACTABLE_VIA: 0.5
+      PAYS_THROUGH: 0.9
+      CO_OCCURS_WITH: 0.3
+
+detection:
+  # Fraud ring detection
+  rings:
+    # Maximum cycle length to search
+    max_cycle_length: 6
+    # Minimum shared attributes to flag
+    min_shared_attributes: 2
+
+  # Shell company detection
+  shell_company:
+    # Centrality/volume divergence threshold
+    centrality_volume_ratio: 5.0
+    # Minimum connections to flagged entities
+    min_flagged_connections: 3
+    # Free trade zones (ISO codes)
+    free_trade_zones:
+      - "AE-FZ"
+      - "SG-FTZ"
+      - "PA-CFZ"
+      - "HK"
+      - "BH-FTZ"
+
+  # Carousel fraud detection
+  carousel:
+    # Minimum cycle value for carousel detection
+    min_cycle_value: 50000
+    # Maximum days between cycle transactions
+    max_cycle_days: 90
+    # Countries where VAT carousel is relevant
+    vat_countries:
+      - "GB"
+      - "DE"
+      - "FR"
+      - "IT"
+      - "ES"
+      - "NL"
+      - "BE"
+      - "PL"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  graphql_path: "/graphql"
+
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  password: "${NEO4J_PASSWORD}"
+  database: "tradegraph"
+  max_connection_pool_size: 50
+
+export:
+  # Signal export configuration
+  signals:
+    endpoint: "http://localhost:8080/api/v1/signals"
+    batch_size: 100
+    retry_attempts: 3
+    retry_delay: 5
